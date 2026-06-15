@@ -12,8 +12,10 @@ const { mockCookieStore, cookieData } = vi.hoisted(() => {
         const value = cookieData.get(name);
         return value === undefined ? undefined : { name, value };
       }),
-      set: vi.fn((name: string, value: string) => {
+      // Allow an optional third `options` param so tests can inspect cookie options
+      set: vi.fn((name: string, value: string, options?: any) => {
         cookieData.set(name, value);
+        return undefined;
       }),
       delete: vi.fn((name: string) => {
         cookieData.delete(name);
@@ -85,7 +87,7 @@ test("createSession stores an auth-token cookie with a verifiable JWT", async ()
 test("createSession sets hardened cookie options expiring in ~7 days", async () => {
   await createSession("user-123", "user@example.com");
 
-  const options = mockCookieStore.set.mock.calls[0][2];
+  const options = mockCookieStore.set.mock.calls[0][2] as any;
   expect(options.httpOnly).toBe(true);
   expect(options.sameSite).toBe("lax");
   expect(options.path).toBe("/");
@@ -102,7 +104,7 @@ test("createSession marks the cookie secure in production", async () => {
 
   await createSession("user-123", "user@example.com");
 
-  const options = mockCookieStore.set.mock.calls[0][2];
+  const options = mockCookieStore.set.mock.calls[0][2] as any;
   expect(options.secure).toBe(true);
 });
 
